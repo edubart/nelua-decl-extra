@@ -1,0 +1,10 @@
+##[[
+cflags '-fuse-ld=gold'
+cflags '-I/usr/include/tensorflow'
+linklib 'tensorflow'
+cinclude '<tensorflow/c/c_api.h>'
+]]
+
+require 'tensorflow'
+
+print(TF_Version())
