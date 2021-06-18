@@ -1,0 +1,188 @@
+##[[
+-- cdefine 'HAVE_CBLAS'
+-- cflags '-fopenmp'
+-- linklib 'cblas'
+
+cdefine 'HAVE_ZLIB'
+linklib 'z'
+
+cdefine 'HAVE_PTHREAD'
+linklib 'pthread'
+
+cinclude 'kann/kann.h'
+cinclude 'kann/kautodiff.h'
+cinclude 'kann/kann_extra/kann_data.h'
+cinclude 'kann/kann.c'
+cinclude 'kann/kautodiff.c'
+cinclude 'kann/kann_extra/kann_data.c'
+]]
+global FILE: type <cimport, nodecl, forwarddecl> = @record{}
+global kad_node_t: type <cimport, nodecl, forwarddecl> = @record{}
+kad_node_t = @record{
+  n_d: uint8,
+  flag: uint8,
+  op: uint16,
+  n_child: int32,
+  tmp: int32,
+  ptr_size: int32,
+  d: [4]int32,
+  ext_label: int32,
+  ext_flag: uint32,
+  x: *float32,
+  g: *float32,
+  ptr: pointer,
+  gtmp: pointer,
+  child: **kad_node_t,
+  pre: *kad_node_t
+}
+global kad_node_p: type = @*kad_node_t
+global function kad_compile_array(n_node: *cint, n_roots: cint, roots: **kad_node_t): **kad_node_t <cimport, nodecl> end
+global function kad_compile(n_node: *cint, n_roots: cint, ...: cvarargs): **kad_node_t <cimport, nodecl> end
+global function kad_delete(n: cint, a: **kad_node_t) <cimport, nodecl> end
+global function kad_eval_at(n: cint, a: **kad_node_t, from: cint): *float32 <cimport, nodecl> end
+global function kad_eval_marked(n: cint, a: **kad_node_t) <cimport, nodecl> end
+global function kad_sync_dim(n: cint, v: **kad_node_t, batch_size: cint): cint <cimport, nodecl> end
+global function kad_grad(n: cint, a: **kad_node_t, from: cint) <cimport, nodecl> end
+global function kad_unroll(n_v: cint, v: **kad_node_t, new_n: *cint, len: *cint): **kad_node_t <cimport, nodecl> end
+global function kad_n_pivots(n_v: cint, v: **kad_node_t): cint <cimport, nodecl> end
+global function kad_clone(n: cint, v: **kad_node_t, batch_size: cint): **kad_node_t <cimport, nodecl> end
+global function kad_var(x: *float32, g: *float32, n_d: cint, ...: cvarargs): *kad_node_t <cimport, nodecl> end
+global function kad_const(x: *float32, n_d: cint, ...: cvarargs): *kad_node_t <cimport, nodecl> end
+global function kad_feed(n_d: cint, ...: cvarargs): *kad_node_t <cimport, nodecl> end
+global function kad_add(x: *kad_node_t, y: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_sub(x: *kad_node_t, y: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_mul(x: *kad_node_t, y: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_matmul(x: *kad_node_t, y: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_cmul(x: *kad_node_t, y: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_mse(x: *kad_node_t, y: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_ce_multi(x: *kad_node_t, y: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_ce_bin(x: *kad_node_t, y: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_ce_bin_neg(x: *kad_node_t, y: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_ce_multi_weighted(pred: *kad_node_t, truth: *kad_node_t, weight: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_conv2d(x: *kad_node_t, w: *kad_node_t, r_stride: cint, c_stride: cint, r_pad: cint, c_pad: cint): *kad_node_t <cimport, nodecl> end
+global function kad_max2d(x: *kad_node_t, kernel_h: cint, kernel_w: cint, r_stride: cint, c_stride: cint, r_pad: cint, c_pad: cint): *kad_node_t <cimport, nodecl> end
+global function kad_conv1d(x: *kad_node_t, w: *kad_node_t, stride: cint, pad: cint): *kad_node_t <cimport, nodecl> end
+global function kad_max1d(x: *kad_node_t, kernel_size: cint, stride: cint, pad: cint): *kad_node_t <cimport, nodecl> end
+global function kad_avg1d(x: *kad_node_t, kernel_size: cint, stride: cint, pad: cint): *kad_node_t <cimport, nodecl> end
+global function kad_dropout(x: *kad_node_t, r: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_sample_normal(x: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_square(x: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_sigm(x: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_tanh(x: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_relu(x: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_softmax(x: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_1minus(x: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_exp(x: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_log(x: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_sin(x: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_stdnorm(x: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_avg(n: cint, x: **kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_max(n: cint, x: **kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_stack(n: cint, x: **kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_select(n: cint, x: **kad_node_t, which: cint): *kad_node_t <cimport, nodecl> end
+global function kad_reduce_sum(x: *kad_node_t, axis: cint): *kad_node_t <cimport, nodecl> end
+global function kad_reduce_mean(x: *kad_node_t, axis: cint): *kad_node_t <cimport, nodecl> end
+global function kad_slice(x: *kad_node_t, axis: cint, start: cint, End: cint): *kad_node_t <cimport, nodecl> end
+global function kad_concat(axis: cint, n: cint, ...: cvarargs): *kad_node_t <cimport, nodecl> end
+global function kad_concat_array(axis: cint, n: cint, p: **kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_reshape(x: *kad_node_t, n_d: cint, d: *cint): *kad_node_t <cimport, nodecl> end
+global function kad_reverse(x: *kad_node_t, axis: cint): *kad_node_t <cimport, nodecl> end
+global function kad_switch(n: cint, p: **kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kad_size_var(n: cint, v: **kad_node_t): cint <cimport, nodecl> end
+global function kad_size_const(n: cint, v: **kad_node_t): cint <cimport, nodecl> end
+global function kad_save(fp: *FILE, n_node: cint, node: **kad_node_t): cint <cimport, nodecl> end
+global function kad_load(fp: *FILE, _n_node: *cint): **kad_node_t <cimport, nodecl> end
+global function kad_rng(): pointer <cimport, nodecl> end
+global function kad_srand(d: pointer, seed: uint64) <cimport, nodecl> end
+global function kad_rand(d: pointer): uint64 <cimport, nodecl> end
+global function kad_drand(d: pointer): float64 <cimport, nodecl> end
+global function kad_drand_normal(d: pointer): float64 <cimport, nodecl> end
+global function kad_saxpy(n: cint, a: float32, x: *float32, y: *float32) <cimport, nodecl> end
+global function kad_trap_fe() <cimport, nodecl> end
+global function kad_print_graph(fp: *FILE, n: cint, v: **kad_node_t) <cimport, nodecl> end
+global function kad_check_grad(n: cint, a: **kad_node_t, from: cint) <cimport, nodecl> end
+global kad_op_f: type <cimport, nodecl> = @function(*kad_node_t, cint): cint
+global kad_op_list: [64]kad_op_f <cimport, nodecl>
+global kad_op_name: [64]cstring <cimport, nodecl>
+global function kad_len(p: *kad_node_t): cint <cimport, nodecl> end
+global kann_t: type <cimport, nodecl> = @record{
+  n: cint,
+  v: **kad_node_t,
+  x: *float32,
+  g: *float32,
+  c: *float32,
+  mt: pointer
+}
+global kann_verbose: cint <cimport, nodecl>
+global function kann_new(cost: *kad_node_t, n_rest: cint, ...: cvarargs): *kann_t <cimport, nodecl> end
+global function kann_unroll(a: *kann_t, ...: cvarargs): *kann_t <cimport, nodecl> end
+global function kann_unroll_array(a: *kann_t, len: *cint): *kann_t <cimport, nodecl> end
+global function kann_clone(a: *kann_t, batch_size: cint): *kann_t <cimport, nodecl> end
+global function kann_delete(a: *kann_t) <cimport, nodecl> end
+global function kann_delete_unrolled(a: *kann_t) <cimport, nodecl> end
+global function kann_mt(ann: *kann_t, n_threads: cint, max_batch_size: cint) <cimport, nodecl> end
+global function kann_feed_bind(a: *kann_t, ext_flag: uint32, ext_label: int32, x: **float32): cint <cimport, nodecl> end
+global function kann_cost(a: *kann_t, cost_label: cint, cal_grad: cint): float32 <cimport, nodecl> end
+global function kann_eval(a: *kann_t, ext_flag: uint32, ext_label: cint): cint <cimport, nodecl> end
+global function kann_eval_out(a: *kann_t): cint <cimport, nodecl> end
+global function kann_class_error(ann: *kann_t, base: *cint): cint <cimport, nodecl> end
+global function kann_find(a: *kann_t, ext_flag: uint32, ext_label: int32): cint <cimport, nodecl> end
+global function kann_feed_dim(a: *kann_t, ext_flag: uint32, ext_label: int32): cint <cimport, nodecl> end
+global function kann_rnn_start(a: *kann_t) <cimport, nodecl> end
+global function kann_rnn_end(a: *kann_t) <cimport, nodecl> end
+global function kann_switch(a: *kann_t, is_train: cint) <cimport, nodecl> end
+global function kann_RMSprop(n: cint, h0: float32, h: *float32, decay: float32, g: *float32, t: *float32, r: *float32) <cimport, nodecl> end
+global function kann_shuffle(n: cint, s: *cint) <cimport, nodecl> end
+global function kann_grad_clip(thres: float32, n: cint, g: *float32): float32 <cimport, nodecl> end
+global function kann_layer_input(n1: cint): *kad_node_t <cimport, nodecl> end
+global function kann_layer_dense(In: *kad_node_t, n1: cint): *kad_node_t <cimport, nodecl> end
+global function kann_layer_dropout(t: *kad_node_t, r: float32): *kad_node_t <cimport, nodecl> end
+global function kann_layer_layernorm(In: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kann_layer_rnn(In: *kad_node_t, n1: cint, rnn_flag: cint): *kad_node_t <cimport, nodecl> end
+global function kann_layer_lstm(In: *kad_node_t, n1: cint, rnn_flag: cint): *kad_node_t <cimport, nodecl> end
+global function kann_layer_gru(In: *kad_node_t, n1: cint, rnn_flag: cint): *kad_node_t <cimport, nodecl> end
+global function kann_layer_conv2d(In: *kad_node_t, n_flt: cint, k_rows: cint, k_cols: cint, stride_r: cint, stride_c: cint, pad_r: cint, pad_c: cint): *kad_node_t <cimport, nodecl> end
+global function kann_layer_conv1d(In: *kad_node_t, n_flt: cint, k_size: cint, stride: cint, pad: cint): *kad_node_t <cimport, nodecl> end
+global function kann_layer_cost(t: *kad_node_t, n_out: cint, cost_type: cint): *kad_node_t <cimport, nodecl> end
+global function kann_new_leaf(flag: uint8, x0_01: float32, n_d: cint, ...: cvarargs): *kad_node_t <cimport, nodecl> end
+global function kann_new_scalar(flag: uint8, x: float32): *kad_node_t <cimport, nodecl> end
+global function kann_new_weight(n_row: cint, n_col: cint): *kad_node_t <cimport, nodecl> end
+global function kann_new_bias(n: cint): *kad_node_t <cimport, nodecl> end
+global function kann_new_weight_conv2d(n_out: cint, n_in: cint, k_row: cint, k_col: cint): *kad_node_t <cimport, nodecl> end
+global function kann_new_weight_conv1d(n_out: cint, n_in: cint, kernel_len: cint): *kad_node_t <cimport, nodecl> end
+global function kann_new_leaf2(offset: *cint, par: *kad_node_p, flag: uint8, x0_01: float32, n_d: cint, ...: cvarargs): *kad_node_t <cimport, nodecl> end
+global function kann_layer_dense2(offset: *cint, par: *kad_node_p, In: *kad_node_t, n1: cint): *kad_node_t <cimport, nodecl> end
+global function kann_layer_dropout2(offset: *cint, par: *kad_node_p, t: *kad_node_t, r: float32): *kad_node_t <cimport, nodecl> end
+global function kann_layer_layernorm2(offset: *cint, par: **kad_node_t, In: *kad_node_t): *kad_node_t <cimport, nodecl> end
+global function kann_layer_rnn2(offset: *cint, par: **kad_node_t, In: *kad_node_t, h0: *kad_node_t, rnn_flag: cint): *kad_node_t <cimport, nodecl> end
+global function kann_layer_gru2(offset: *cint, par: **kad_node_t, In: *kad_node_t, h0: *kad_node_t, rnn_flag: cint): *kad_node_t <cimport, nodecl> end
+global function kann_train_fnn1(ann: *kann_t, lr: float32, mini_size: cint, max_epoch: cint, max_drop_streak: cint, frac_val: float32, n: cint, _x: **float32, _y: **float32): cint <cimport, nodecl> end
+global function kann_cost_fnn1(a: *kann_t, n: cint, x: **float32, y: **float32): float32 <cimport, nodecl> end
+global function kann_apply1_to(a: *kann_t, x: *float32, ext_flag: cint, ext_label: cint): *float32 <cimport, nodecl> end
+global function kann_apply1(a: *kann_t, x: *float32): *float32 <cimport, nodecl> end
+global function kann_save_fp(fp: *FILE, ann: *kann_t) <cimport, nodecl> end
+global function kann_save(fn: cstring, ann: *kann_t) <cimport, nodecl> end
+global function kann_load_fp(fp: *FILE): *kann_t <cimport, nodecl> end
+global function kann_load(fn: cstring): *kann_t <cimport, nodecl> end
+global kann_data_t: type <cimport, nodecl> = @record{
+  n_row: cint,
+  n_col: cint,
+  n_grp: cint,
+  x: **float32,
+  rname: *cstring,
+  cname: *cstring,
+  grp: *cint
+}
+global function kann_data_read(fn: cstring): *kann_data_t <cimport, nodecl> end
+global function kann_data_free(d: *kann_data_t) <cimport, nodecl> end
+global KANN_VERSION: cstring <comptime> = "r549"
+global KANN_F_IN: cint <comptime> = 0x1
+global KANN_F_OUT: cint <comptime> = 0x2
+global KANN_F_TRUTH: cint <comptime> = 0x4
+global KANN_F_COST: cint <comptime> = 0x8
+global KANN_C_CEB: cint <comptime> = 1
+global KANN_C_CEM: cint <comptime> = 2
+global KANN_C_CEB_NEG: cint <comptime> = 3
+global KANN_C_MSE: cint <comptime> = 4
+global KANN_RNN_VAR_H0: cint <comptime> = 0x1
+global KANN_RNN_NORM: cint <comptime> = 0x2

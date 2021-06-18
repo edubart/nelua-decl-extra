@@ -1,0 +1,103 @@
+require 'kann'
+require 'arg'
+require 'string'
+require 'io'
+
+local ann: *kann_t
+local x: *kann_data_t, y: *kann_data_t
+local fn_in: string, fn_out: string
+local mini_size = 64
+local max_epoch = 2
+local max_drop_streak = 10
+local seed = 131
+local n_h_fc, n_h_flt = 128, 32
+local n_threads = 1
+local lr = 0.001
+local dropout = 0.2
+local frac_val = 0.1
+
+local argi = 1
+while argi <= #arg do
+  local c = arg[argi]
+  argi = argi + 1
+  if c == '-i' then fn_in = arg[argi]
+  elseif c == '-o' then fn_out = arg[argi]
+  elseif c == '-m' then max_epoch = tointeger(arg[argi])
+  elseif c == '-h' then n_h_fc = tointeger(arg[argi])
+  elseif c == '-f' then n_h_flt = tointeger(arg[argi])
+  elseif c == '-d' then dropout = tonumber(arg[argi])
+  elseif c == '-s' then seed = tointeger(arg[argi])
+  elseif c == '-t' then n_threads = tointeger(arg[argi])
+  elseif c == '-v' then frac_val = tonumber(arg[argi])
+  else argi = argi - 1 break end
+  argi = argi + 1
+end
+
+local xdata: string, ydata: string
+if argi <= #arg then
+ xdata = arg[argi]
+ argi = argi + 1
+end
+if argi <= #arg then
+ ydata = arg[argi]
+ argi = argi + 1
+end
+
+if #arg == 0 or argi <= #arg or xdata == '' then
+  print('Usage: mnist-cnn [-i model] [-o model] [-t nThreads] <x.knd> [y.knd]')
+  return 1
+end
+
+kad_trap_fe()
+kad_srand(nilptr, seed)
+if fn_in ~= '' then
+  ann = kann_load(fn_in)
+  print(ann)
+else
+  local t: *kad_node_t
+  t = kad_feed(4, 1, 1, 28, 28)
+  t.ext_flag = t.ext_flag | KANN_F_IN
+  t = kad_relu(kann_layer_conv2d(t, n_h_flt, 3, 3, 1, 1, 0, 0)) -- 3x3 kernel; 1x1 stride; 0x0 padding
+  t = kad_relu(kann_layer_conv2d(t, n_h_flt, 3, 3, 1, 1, 0, 0))
+  t = kad_max2d(t, 2, 2, 2, 2, 0, 0) -- 2x2 kernel; 2x2 stride; 0x0 padding
+  t = kann_layer_dropout(t, dropout)
+  t = kann_layer_dense(t, n_h_fc)
+  t = kad_relu(t)
+  t = kann_layer_dropout(t, dropout)
+  ann = kann_new(kann_layer_cost(t, 10, KANN_C_CEB), 0)
+end
+
+local x = kann_data_read(xdata)
+print(x.n_col)
+assert(x.n_col == 28*28)
+if ydata ~= '' then
+  y = kann_data_read(ydata)
+end
+
+if y then -- training
+  assert(y.n_col == 10)
+  if n_threads > 1 then kann_mt(ann, n_threads, mini_size) end
+  kann_train_fnn1(ann, lr, mini_size, max_epoch, max_drop_streak, frac_val, x.n_row, x.x, y.x)
+  if fn_out then kann_save(fn_out, ann) end
+  kann_data_free(y)
+else -- applying
+  kann_switch(ann, 0)
+  local n_out = kann_feed_dim(ann, KANN_F_TRUTH, 0)
+  assert(n_out == 10)
+  for i=0,<x.n_row do
+    local y: *[0]float32
+    y = kann_apply1(ann, (@*[0]*[0]float32)(x.x)[i])
+    if x.rname then
+      io.write((@*[0]cstring)(x.rname)[i], '\t')
+    end
+    for j=0,<n_out do
+      if j > 0 then io.write('\t') end
+      io.writef("%.3g", y[j] + 1.0 - 1.0)
+    end
+    io.write('\n')
+    io.flush()
+  end
+end
+
+kann_data_free(x)
+kann_delete(ann)
