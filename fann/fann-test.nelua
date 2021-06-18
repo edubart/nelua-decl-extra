@@ -1,0 +1,35 @@
+require 'io'
+require 'fann'
+require 'math'
+
+-- Simple train
+local num_input = 2
+local num_output = 1
+local num_layers = 3
+local num_neurons_hidden = 3
+local desired_error = 0.001
+local max_epochs = 500000
+local epochs_between_reports = 1000
+
+local ann = fann_create_standard(num_layers, num_input, num_neurons_hidden, num_output)
+
+fann_set_activation_function_hidden(ann, FANN_SIGMOID_SYMMETRIC)
+fann_set_activation_function_output(ann, FANN_SIGMOID_SYMMETRIC)
+
+fann_train_on_file(ann, "fann/examples/xor.data", max_epochs, epochs_between_reports, desired_error)
+
+fann_save(ann, "xor_float.net")
+
+fann_destroy(ann)
+
+-- Simple test
+local ann = fann_create_from_file("xor_float.net")
+
+local input: [2]fann_type
+input[0] = -1
+input[1] = 1
+local calc_out = (@*[0]float32)(fann_run(ann, &input[0]))
+
+io.writef("xor test (%f,%f) -> %f\n", input[0], input[1], calc_out[0])
+
+fann_destroy(ann)

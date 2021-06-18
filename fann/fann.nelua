@@ -1,0 +1,377 @@
+##[[
+cflags '-I./fann/src -I./fann/src/include'
+cflags '-fopenmp'
+cinclude 'floatfann.h'
+cinclude 'floatfann.c'
+]]
+global fann_type: type = @float32
+global FILE: type <cimport, nodecl, forwarddecl> = @record{}
+global fann_error: type <cimport, nodecl, forwarddecl, ctypedef> = @record{}
+global fann_errno_enum: type <cimport, nodecl, using, ctypedef> = @enum(cint){
+  FANN_E_NO_ERROR = 0,
+  FANN_E_CANT_OPEN_CONFIG_R = 1,
+  FANN_E_CANT_OPEN_CONFIG_W = 2,
+  FANN_E_WRONG_CONFIG_VERSION = 3,
+  FANN_E_CANT_READ_CONFIG = 4,
+  FANN_E_CANT_READ_NEURON = 5,
+  FANN_E_CANT_READ_CONNECTIONS = 6,
+  FANN_E_WRONG_NUM_CONNECTIONS = 7,
+  FANN_E_CANT_OPEN_TD_W = 8,
+  FANN_E_CANT_OPEN_TD_R = 9,
+  FANN_E_CANT_READ_TD = 10,
+  FANN_E_CANT_ALLOCATE_MEM = 11,
+  FANN_E_CANT_TRAIN_ACTIVATION = 12,
+  FANN_E_CANT_USE_ACTIVATION = 13,
+  FANN_E_TRAIN_DATA_MISMATCH = 14,
+  FANN_E_CANT_USE_TRAIN_ALG = 15,
+  FANN_E_TRAIN_DATA_SUBSET = 16,
+  FANN_E_INDEX_OUT_OF_BOUND = 17,
+  FANN_E_SCALE_NOT_PRESENT = 18,
+  FANN_E_INPUT_NO_MATCH = 19,
+  FANN_E_OUTPUT_NO_MATCH = 20,
+  FANN_E_WRONG_PARAMETERS_FOR_CREATE = 21
+}
+global function fann_set_error_log(errdat: *fann_error, log_file: *FILE) <cimport, nodecl> end
+global function fann_get_errno(errdat: *fann_error): fann_errno_enum <cimport, nodecl> end
+global function fann_reset_errno(errdat: *fann_error) <cimport, nodecl> end
+global function fann_reset_errstr(errdat: *fann_error) <cimport, nodecl> end
+global function fann_get_errstr(errdat: *fann_error): cstring <cimport, nodecl> end
+global function fann_print_error(errdat: *fann_error) <cimport, nodecl> end
+global fann_default_error_log: *FILE <cimport, nodecl>
+global fann_train_enum: type <cimport, nodecl, using, ctypedef> = @enum(cint){
+  FANN_TRAIN_INCREMENTAL = 0,
+  FANN_TRAIN_BATCH = 1,
+  FANN_TRAIN_RPROP = 2,
+  FANN_TRAIN_QUICKPROP = 3,
+  FANN_TRAIN_SARPROP = 4
+}
+global fann_activationfunc_enum: type <cimport, nodecl, using, ctypedef> = @enum(cint){
+  FANN_LINEAR = 0,
+  FANN_THRESHOLD = 1,
+  FANN_THRESHOLD_SYMMETRIC = 2,
+  FANN_SIGMOID = 3,
+  FANN_SIGMOID_STEPWISE = 4,
+  FANN_SIGMOID_SYMMETRIC = 5,
+  FANN_SIGMOID_SYMMETRIC_STEPWISE = 6,
+  FANN_GAUSSIAN = 7,
+  FANN_GAUSSIAN_SYMMETRIC = 8,
+  FANN_GAUSSIAN_STEPWISE = 9,
+  FANN_ELLIOT = 10,
+  FANN_ELLIOT_SYMMETRIC = 11,
+  FANN_LINEAR_PIECE = 12,
+  FANN_LINEAR_PIECE_SYMMETRIC = 13,
+  FANN_SIN_SYMMETRIC = 14,
+  FANN_COS_SYMMETRIC = 15,
+  FANN_SIN = 16,
+  FANN_COS = 17
+}
+global fann_errorfunc_enum: type <cimport, nodecl, using, ctypedef> = @enum(cint){
+  FANN_ERRORFUNC_LINEAR = 0,
+  FANN_ERRORFUNC_TANH = 1
+}
+global fann_stopfunc_enum: type <cimport, nodecl, using, ctypedef> = @enum(cint){
+  FANN_STOPFUNC_MSE = 0,
+  FANN_STOPFUNC_BIT = 1
+}
+global fann_nettype_enum: type <cimport, nodecl, using, ctypedef> = @enum(cint){
+  FANN_NETTYPE_LAYER = 0,
+  FANN_NETTYPE_SHORTCUT = 1
+}
+global fann: type <cimport, nodecl, forwarddecl, ctypedef> = @record{}
+global fann_train_data: type <cimport, nodecl, forwarddecl, ctypedef> = @record{}
+global fann_callback_type: type <cimport, nodecl> = @function(*fann, *fann_train_data, cuint, cuint, float32, cuint): cint
+global fann_neuron: type <cimport, nodecl, ctypedef> = @record{
+  first_con: cuint,
+  last_con: cuint,
+  sum: fann_type,
+  value: fann_type,
+  activation_steepness: fann_type,
+  activation_function: fann_activationfunc_enum
+}
+global fann_layer: type <cimport, nodecl, ctypedef> = @record{
+  first_neuron: *fann_neuron,
+  last_neuron: *fann_neuron
+}
+fann_error = @record{
+  errno_f: fann_errno_enum,
+  error_log: *FILE,
+  errstr: cstring
+}
+fann = @record{
+  errno_f: fann_errno_enum,
+  error_log: *FILE,
+  errstr: cstring,
+  learning_rate: float32,
+  learning_momentum: float32,
+  connection_rate: float32,
+  network_type: fann_nettype_enum,
+  first_layer: *fann_layer,
+  last_layer: *fann_layer,
+  total_neurons: cuint,
+  num_input: cuint,
+  num_output: cuint,
+  weights: *fann_type,
+  connections: **fann_neuron,
+  train_errors: *fann_type,
+  training_algorithm: fann_train_enum,
+  total_connections: cuint,
+  output: *fann_type,
+  num_MSE: cuint,
+  MSE_value: float32,
+  num_bit_fail: cuint,
+  bit_fail_limit: fann_type,
+  train_error_function: fann_errorfunc_enum,
+  train_stop_function: fann_stopfunc_enum,
+  callback: fann_callback_type,
+  user_data: pointer,
+  cascade_output_change_fraction: float32,
+  cascade_output_stagnation_epochs: cuint,
+  cascade_candidate_change_fraction: float32,
+  cascade_candidate_stagnation_epochs: cuint,
+  cascade_best_candidate: cuint,
+  cascade_candidate_limit: fann_type,
+  cascade_weight_multiplier: fann_type,
+  cascade_max_out_epochs: cuint,
+  cascade_max_cand_epochs: cuint,
+  cascade_min_out_epochs: cuint,
+  cascade_min_cand_epochs: cuint,
+  cascade_activation_functions: *fann_activationfunc_enum,
+  cascade_activation_functions_count: cuint,
+  cascade_activation_steepnesses: *fann_type,
+  cascade_activation_steepnesses_count: cuint,
+  cascade_num_candidate_groups: cuint,
+  cascade_candidate_scores: *fann_type,
+  total_neurons_allocated: cuint,
+  total_connections_allocated: cuint,
+  quickprop_decay: float32,
+  quickprop_mu: float32,
+  rprop_increase_factor: float32,
+  rprop_decrease_factor: float32,
+  rprop_delta_min: float32,
+  rprop_delta_max: float32,
+  rprop_delta_zero: float32,
+  sarprop_weight_decay_shift: float32,
+  sarprop_step_error_threshold_factor: float32,
+  sarprop_step_error_shift: float32,
+  sarprop_temperature: float32,
+  sarprop_epoch: cuint,
+  train_slopes: *fann_type,
+  prev_steps: *fann_type,
+  prev_train_slopes: *fann_type,
+  prev_weights_deltas: *fann_type,
+  scale_mean_in: *float32,
+  scale_deviation_in: *float32,
+  scale_new_min_in: *float32,
+  scale_factor_in: *float32,
+  scale_mean_out: *float32,
+  scale_deviation_out: *float32,
+  scale_new_min_out: *float32,
+  scale_factor_out: *float32
+}
+global fann_connection: type <cimport, nodecl, ctypedef> = @record{
+  from_neuron: cuint,
+  to_neuron: cuint,
+  weight: fann_type
+}
+global function fann_allocate_structure(num_layers: cuint): *fann <cimport, nodecl> end
+global function fann_allocate_neurons(ann: *fann) <cimport, nodecl> end
+global function fann_allocate_connections(ann: *fann) <cimport, nodecl> end
+global function fann_save_internal(ann: *fann, configuration_file: cstring, save_as_fixed: cuint): cint <cimport, nodecl> end
+global function fann_save_internal_fd(ann: *fann, conf: *FILE, configuration_file: cstring, save_as_fixed: cuint): cint <cimport, nodecl> end
+global function fann_save_train_internal(data: *fann_train_data, filename: cstring, save_as_fixed: cuint, decimal_point: cuint): cint <cimport, nodecl> end
+global function fann_save_train_internal_fd(data: *fann_train_data, file: *FILE, filename: cstring, save_as_fixed: cuint, decimal_point: cuint): cint <cimport, nodecl> end
+global function fann_update_stepwise(ann: *fann) <cimport, nodecl> end
+global function fann_seed_rand() <cimport, nodecl> end
+global function fann_init_error_data(errdat: *fann_error) <cimport, nodecl> end
+global function fann_create_from_fd(conf: *FILE, configuration_file: cstring): *fann <cimport, nodecl> end
+global function fann_read_train_from_fd(file: *FILE, filename: cstring): *fann_train_data <cimport, nodecl> end
+global function fann_compute_MSE(ann: *fann, desired_output: *fann_type) <cimport, nodecl> end
+global function fann_update_output_weights(ann: *fann) <cimport, nodecl> end
+global function fann_backpropagate_MSE(ann: *fann) <cimport, nodecl> end
+global function fann_update_weights(ann: *fann) <cimport, nodecl> end
+global function fann_update_slopes_batch(ann: *fann, layer_begin: *fann_layer, layer_end: *fann_layer) <cimport, nodecl> end
+global function fann_update_weights_quickprop(ann: *fann, num_data: cuint, first_weight: cuint, past_end: cuint) <cimport, nodecl> end
+global function fann_update_weights_batch(ann: *fann, num_data: cuint, first_weight: cuint, past_end: cuint) <cimport, nodecl> end
+global function fann_update_weights_irpropm(ann: *fann, first_weight: cuint, past_end: cuint) <cimport, nodecl> end
+global function fann_update_weights_sarprop(ann: *fann, epoch: cuint, first_weight: cuint, past_end: cuint) <cimport, nodecl> end
+global function fann_clear_train_arrays(ann: *fann) <cimport, nodecl> end
+global function fann_activation(ann: *fann, activation_function: cuint, steepness: fann_type, value: fann_type): fann_type <cimport, nodecl> end
+global function fann_activation_derived(activation_function: cuint, steepness: fann_type, value: fann_type, sum: fann_type): fann_type <cimport, nodecl> end
+global function fann_desired_error_reached(ann: *fann, desired_error: float32): cint <cimport, nodecl> end
+global function fann_train_outputs(ann: *fann, data: *fann_train_data, desired_error: float32): cint <cimport, nodecl> end
+global function fann_train_outputs_epoch(ann: *fann, data: *fann_train_data): float32 <cimport, nodecl> end
+global function fann_train_candidates(ann: *fann, data: *fann_train_data): cint <cimport, nodecl> end
+global function fann_train_candidates_epoch(ann: *fann, data: *fann_train_data): fann_type <cimport, nodecl> end
+global function fann_install_candidate(ann: *fann) <cimport, nodecl> end
+global function fann_check_input_output_sizes(ann: *fann, data: *fann_train_data): cint <cimport, nodecl> end
+global function fann_initialize_candidates(ann: *fann): cint <cimport, nodecl> end
+global function fann_set_shortcut_connections(ann: *fann) <cimport, nodecl> end
+global function fann_allocate_scale(ann: *fann): cint <cimport, nodecl> end
+global function fann_scale_data_to_range(data: **fann_type, num_data: cuint, num_elem: cuint, old_min: fann_type, old_max: fann_type, new_min: fann_type, new_max: fann_type) <cimport, nodecl> end
+fann_train_data = @record{
+  errno_f: fann_errno_enum,
+  error_log: *FILE,
+  errstr: cstring,
+  num_data: cuint,
+  num_input: cuint,
+  num_output: cuint,
+  input: **fann_type,
+  output: **fann_type
+}
+global function fann_train(ann: *fann, input: *fann_type, desired_output: *fann_type) <cimport, nodecl> end
+global function fann_test(ann: *fann, input: *fann_type, desired_output: *fann_type): *fann_type <cimport, nodecl> end
+global function fann_get_MSE(ann: *fann): float32 <cimport, nodecl> end
+global function fann_get_bit_fail(ann: *fann): cuint <cimport, nodecl> end
+global function fann_reset_MSE(ann: *fann) <cimport, nodecl> end
+global function fann_train_on_data(ann: *fann, data: *fann_train_data, max_epochs: cuint, epochs_between_reports: cuint, desired_error: float32) <cimport, nodecl> end
+global function fann_train_on_file(ann: *fann, filename: cstring, max_epochs: cuint, epochs_between_reports: cuint, desired_error: float32) <cimport, nodecl> end
+global function fann_train_epoch(ann: *fann, data: *fann_train_data): float32 <cimport, nodecl> end
+global function fann_test_data(ann: *fann, data: *fann_train_data): float32 <cimport, nodecl> end
+global function fann_read_train_from_file(filename: cstring): *fann_train_data <cimport, nodecl> end
+global function fann_create_train(num_data: cuint, num_input: cuint, num_output: cuint): *fann_train_data <cimport, nodecl> end
+global function fann_create_train_pointer_array(num_data: cuint, num_input: cuint, input: **fann_type, num_output: cuint, output: **fann_type): *fann_train_data <cimport, nodecl> end
+global function fann_create_train_array(num_data: cuint, num_input: cuint, input: *fann_type, num_output: cuint, output: *fann_type): *fann_train_data <cimport, nodecl> end
+global function fann_create_train_from_callback(num_data: cuint, num_input: cuint, num_output: cuint, user_function: function(cuint, cuint, cuint, *fann_type, *fann_type)): *fann_train_data <cimport, nodecl> end
+global function fann_destroy_train(train_data: *fann_train_data) <cimport, nodecl> end
+global function fann_get_train_input(data: *fann_train_data, position: cuint): *fann_type <cimport, nodecl> end
+global function fann_get_train_output(data: *fann_train_data, position: cuint): *fann_type <cimport, nodecl> end
+global function fann_shuffle_train_data(train_data: *fann_train_data) <cimport, nodecl> end
+global function fann_get_min_train_input(train_data: *fann_train_data): fann_type <cimport, nodecl> end
+global function fann_get_max_train_input(train_data: *fann_train_data): fann_type <cimport, nodecl> end
+global function fann_get_min_train_output(train_data: *fann_train_data): fann_type <cimport, nodecl> end
+global function fann_get_max_train_output(train_data: *fann_train_data): fann_type <cimport, nodecl> end
+global function fann_scale_train(ann: *fann, data: *fann_train_data) <cimport, nodecl> end
+global function fann_descale_train(ann: *fann, data: *fann_train_data) <cimport, nodecl> end
+global function fann_set_input_scaling_params(ann: *fann, data: *fann_train_data, new_input_min: float32, new_input_max: float32): cint <cimport, nodecl> end
+global function fann_set_output_scaling_params(ann: *fann, data: *fann_train_data, new_output_min: float32, new_output_max: float32): cint <cimport, nodecl> end
+global function fann_set_scaling_params(ann: *fann, data: *fann_train_data, new_input_min: float32, new_input_max: float32, new_output_min: float32, new_output_max: float32): cint <cimport, nodecl> end
+global function fann_clear_scaling_params(ann: *fann): cint <cimport, nodecl> end
+global function fann_scale_input(ann: *fann, input_vector: *fann_type) <cimport, nodecl> end
+global function fann_scale_output(ann: *fann, output_vector: *fann_type) <cimport, nodecl> end
+global function fann_descale_input(ann: *fann, input_vector: *fann_type) <cimport, nodecl> end
+global function fann_descale_output(ann: *fann, output_vector: *fann_type) <cimport, nodecl> end
+global function fann_scale_input_train_data(train_data: *fann_train_data, new_min: fann_type, new_max: fann_type) <cimport, nodecl> end
+global function fann_scale_output_train_data(train_data: *fann_train_data, new_min: fann_type, new_max: fann_type) <cimport, nodecl> end
+global function fann_scale_train_data(train_data: *fann_train_data, new_min: fann_type, new_max: fann_type) <cimport, nodecl> end
+global function fann_merge_train_data(data1: *fann_train_data, data2: *fann_train_data): *fann_train_data <cimport, nodecl> end
+global function fann_duplicate_train_data(data: *fann_train_data): *fann_train_data <cimport, nodecl> end
+global function fann_subset_train_data(data: *fann_train_data, pos: cuint, length: cuint): *fann_train_data <cimport, nodecl> end
+global function fann_length_train_data(data: *fann_train_data): cuint <cimport, nodecl> end
+global function fann_num_input_train_data(data: *fann_train_data): cuint <cimport, nodecl> end
+global function fann_num_output_train_data(data: *fann_train_data): cuint <cimport, nodecl> end
+global function fann_save_train(data: *fann_train_data, filename: cstring): cint <cimport, nodecl> end
+global function fann_save_train_to_fixed(data: *fann_train_data, filename: cstring, decimal_point: cuint): cint <cimport, nodecl> end
+global function fann_get_training_algorithm(ann: *fann): fann_train_enum <cimport, nodecl> end
+global function fann_set_training_algorithm(ann: *fann, training_algorithm: fann_train_enum) <cimport, nodecl> end
+global function fann_get_learning_rate(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_learning_rate(ann: *fann, learning_rate: float32) <cimport, nodecl> end
+global function fann_get_learning_momentum(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_learning_momentum(ann: *fann, learning_momentum: float32) <cimport, nodecl> end
+global function fann_get_activation_function(ann: *fann, layer: cint, neuron: cint): fann_activationfunc_enum <cimport, nodecl> end
+global function fann_set_activation_function(ann: *fann, activation_function: fann_activationfunc_enum, layer: cint, neuron: cint) <cimport, nodecl> end
+global function fann_set_activation_function_layer(ann: *fann, activation_function: fann_activationfunc_enum, layer: cint) <cimport, nodecl> end
+global function fann_set_activation_function_hidden(ann: *fann, activation_function: fann_activationfunc_enum) <cimport, nodecl> end
+global function fann_set_activation_function_output(ann: *fann, activation_function: fann_activationfunc_enum) <cimport, nodecl> end
+global function fann_get_activation_steepness(ann: *fann, layer: cint, neuron: cint): fann_type <cimport, nodecl> end
+global function fann_set_activation_steepness(ann: *fann, steepness: fann_type, layer: cint, neuron: cint) <cimport, nodecl> end
+global function fann_set_activation_steepness_layer(ann: *fann, steepness: fann_type, layer: cint) <cimport, nodecl> end
+global function fann_set_activation_steepness_hidden(ann: *fann, steepness: fann_type) <cimport, nodecl> end
+global function fann_set_activation_steepness_output(ann: *fann, steepness: fann_type) <cimport, nodecl> end
+global function fann_get_train_error_function(ann: *fann): fann_errorfunc_enum <cimport, nodecl> end
+global function fann_set_train_error_function(ann: *fann, train_error_function: fann_errorfunc_enum) <cimport, nodecl> end
+global function fann_get_train_stop_function(ann: *fann): fann_stopfunc_enum <cimport, nodecl> end
+global function fann_set_train_stop_function(ann: *fann, train_stop_function: fann_stopfunc_enum) <cimport, nodecl> end
+global function fann_get_bit_fail_limit(ann: *fann): fann_type <cimport, nodecl> end
+global function fann_set_bit_fail_limit(ann: *fann, bit_fail_limit: fann_type) <cimport, nodecl> end
+global function fann_set_callback(ann: *fann, callback: fann_callback_type) <cimport, nodecl> end
+global function fann_get_quickprop_decay(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_quickprop_decay(ann: *fann, quickprop_decay: float32) <cimport, nodecl> end
+global function fann_get_quickprop_mu(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_quickprop_mu(ann: *fann, quickprop_mu: float32) <cimport, nodecl> end
+global function fann_get_rprop_increase_factor(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_rprop_increase_factor(ann: *fann, rprop_increase_factor: float32) <cimport, nodecl> end
+global function fann_get_rprop_decrease_factor(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_rprop_decrease_factor(ann: *fann, rprop_decrease_factor: float32) <cimport, nodecl> end
+global function fann_get_rprop_delta_min(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_rprop_delta_min(ann: *fann, rprop_delta_min: float32) <cimport, nodecl> end
+global function fann_get_rprop_delta_max(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_rprop_delta_max(ann: *fann, rprop_delta_max: float32) <cimport, nodecl> end
+global function fann_get_rprop_delta_zero(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_rprop_delta_zero(ann: *fann, rprop_delta_max: float32) <cimport, nodecl> end
+global function fann_get_sarprop_weight_decay_shift(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_sarprop_weight_decay_shift(ann: *fann, sarprop_weight_decay_shift: float32) <cimport, nodecl> end
+global function fann_get_sarprop_step_error_threshold_factor(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_sarprop_step_error_threshold_factor(ann: *fann, sarprop_step_error_threshold_factor: float32) <cimport, nodecl> end
+global function fann_get_sarprop_step_error_shift(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_sarprop_step_error_shift(ann: *fann, sarprop_step_error_shift: float32) <cimport, nodecl> end
+global function fann_get_sarprop_temperature(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_sarprop_temperature(ann: *fann, sarprop_temperature: float32) <cimport, nodecl> end
+global function fann_cascadetrain_on_data(ann: *fann, data: *fann_train_data, max_neurons: cuint, neurons_between_reports: cuint, desired_error: float32) <cimport, nodecl> end
+global function fann_cascadetrain_on_file(ann: *fann, filename: cstring, max_neurons: cuint, neurons_between_reports: cuint, desired_error: float32) <cimport, nodecl> end
+global function fann_get_cascade_output_change_fraction(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_cascade_output_change_fraction(ann: *fann, cascade_output_change_fraction: float32) <cimport, nodecl> end
+global function fann_get_cascade_output_stagnation_epochs(ann: *fann): cuint <cimport, nodecl> end
+global function fann_set_cascade_output_stagnation_epochs(ann: *fann, cascade_output_stagnation_epochs: cuint) <cimport, nodecl> end
+global function fann_get_cascade_candidate_change_fraction(ann: *fann): float32 <cimport, nodecl> end
+global function fann_set_cascade_candidate_change_fraction(ann: *fann, cascade_candidate_change_fraction: float32) <cimport, nodecl> end
+global function fann_get_cascade_candidate_stagnation_epochs(ann: *fann): cuint <cimport, nodecl> end
+global function fann_set_cascade_candidate_stagnation_epochs(ann: *fann, cascade_candidate_stagnation_epochs: cuint) <cimport, nodecl> end
+global function fann_get_cascade_weight_multiplier(ann: *fann): fann_type <cimport, nodecl> end
+global function fann_set_cascade_weight_multiplier(ann: *fann, cascade_weight_multiplier: fann_type) <cimport, nodecl> end
+global function fann_get_cascade_candidate_limit(ann: *fann): fann_type <cimport, nodecl> end
+global function fann_set_cascade_candidate_limit(ann: *fann, cascade_candidate_limit: fann_type) <cimport, nodecl> end
+global function fann_get_cascade_max_out_epochs(ann: *fann): cuint <cimport, nodecl> end
+global function fann_set_cascade_max_out_epochs(ann: *fann, cascade_max_out_epochs: cuint) <cimport, nodecl> end
+global function fann_get_cascade_min_out_epochs(ann: *fann): cuint <cimport, nodecl> end
+global function fann_set_cascade_min_out_epochs(ann: *fann, cascade_min_out_epochs: cuint) <cimport, nodecl> end
+global function fann_get_cascade_max_cand_epochs(ann: *fann): cuint <cimport, nodecl> end
+global function fann_set_cascade_max_cand_epochs(ann: *fann, cascade_max_cand_epochs: cuint) <cimport, nodecl> end
+global function fann_get_cascade_min_cand_epochs(ann: *fann): cuint <cimport, nodecl> end
+global function fann_set_cascade_min_cand_epochs(ann: *fann, cascade_min_cand_epochs: cuint) <cimport, nodecl> end
+global function fann_get_cascade_num_candidates(ann: *fann): cuint <cimport, nodecl> end
+global function fann_get_cascade_activation_functions_count(ann: *fann): cuint <cimport, nodecl> end
+global function fann_get_cascade_activation_functions(ann: *fann): *fann_activationfunc_enum <cimport, nodecl> end
+global function fann_set_cascade_activation_functions(ann: *fann, cascade_activation_functions: *fann_activationfunc_enum, cascade_activation_functions_count: cuint) <cimport, nodecl> end
+global function fann_get_cascade_activation_steepnesses_count(ann: *fann): cuint <cimport, nodecl> end
+global function fann_get_cascade_activation_steepnesses(ann: *fann): *fann_type <cimport, nodecl> end
+global function fann_set_cascade_activation_steepnesses(ann: *fann, cascade_activation_steepnesses: *fann_type, cascade_activation_steepnesses_count: cuint) <cimport, nodecl> end
+global function fann_get_cascade_num_candidate_groups(ann: *fann): cuint <cimport, nodecl> end
+global function fann_set_cascade_num_candidate_groups(ann: *fann, cascade_num_candidate_groups: cuint) <cimport, nodecl> end
+global function fann_create_from_file(configuration_file: cstring): *fann <cimport, nodecl> end
+global function fann_save(ann: *fann, configuration_file: cstring): cint <cimport, nodecl> end
+global function fann_save_to_fixed(ann: *fann, configuration_file: cstring): cint <cimport, nodecl> end
+global function fann_create_standard(num_layers: cuint, ...: cvarargs): *fann <cimport, nodecl> end
+global function fann_create_standard_array(num_layers: cuint, layers: *cuint): *fann <cimport, nodecl> end
+global function fann_create_sparse(connection_rate: float32, num_layers: cuint, ...: cvarargs): *fann <cimport, nodecl> end
+global function fann_create_sparse_array(connection_rate: float32, num_layers: cuint, layers: *cuint): *fann <cimport, nodecl> end
+global function fann_create_shortcut(num_layers: cuint, ...: cvarargs): *fann <cimport, nodecl> end
+global function fann_create_shortcut_array(num_layers: cuint, layers: *cuint): *fann <cimport, nodecl> end
+global function fann_destroy(ann: *fann) <cimport, nodecl> end
+global function fann_copy(ann: *fann): *fann <cimport, nodecl> end
+global function fann_run(ann: *fann, input: *fann_type): *fann_type <cimport, nodecl> end
+global function fann_randomize_weights(ann: *fann, min_weight: fann_type, max_weight: fann_type) <cimport, nodecl> end
+global function fann_init_weights(ann: *fann, train_data: *fann_train_data) <cimport, nodecl> end
+global function fann_print_connections(ann: *fann) <cimport, nodecl> end
+global function fann_print_parameters(ann: *fann) <cimport, nodecl> end
+global function fann_get_num_input(ann: *fann): cuint <cimport, nodecl> end
+global function fann_get_num_output(ann: *fann): cuint <cimport, nodecl> end
+global function fann_get_total_neurons(ann: *fann): cuint <cimport, nodecl> end
+global function fann_get_total_connections(ann: *fann): cuint <cimport, nodecl> end
+global function fann_get_network_type(ann: *fann): fann_nettype_enum <cimport, nodecl> end
+global function fann_get_connection_rate(ann: *fann): float32 <cimport, nodecl> end
+global function fann_get_num_layers(ann: *fann): cuint <cimport, nodecl> end
+global function fann_get_layer_array(ann: *fann, layers: *cuint) <cimport, nodecl> end
+global function fann_get_bias_array(ann: *fann, bias: *cuint) <cimport, nodecl> end
+global function fann_get_connection_array(ann: *fann, connections: *fann_connection) <cimport, nodecl> end
+global function fann_set_weight_array(ann: *fann, connections: *fann_connection, num_connections: cuint) <cimport, nodecl> end
+global function fann_set_weight(ann: *fann, from_neuron: cuint, to_neuron: cuint, weight: fann_type) <cimport, nodecl> end
+global function fann_get_weights(ann: *fann, weights: *fann_type) <cimport, nodecl> end
+global function fann_set_weights(ann: *fann, weights: *fann_type) <cimport, nodecl> end
+global function fann_set_user_data(ann: *fann, user_data: pointer) <cimport, nodecl> end
+global function fann_get_user_data(ann: *fann): pointer <cimport, nodecl> end
+global function fann_disable_seed_rand() <cimport, nodecl> end
+global function fann_enable_seed_rand() <cimport, nodecl> end
+global FANN_ERRSTR_MAX: cint <comptime> = 128
+global FANN_FIX_VERSION: cstring <comptime> = "FANN_FIX_2.0"
+global FANN_FLO_VERSION: cstring <comptime> = "FANN_FLO_2.1"
+global FANN_CONF_VERSION: cstring <comptime> = FANN_FLO_VERSION
